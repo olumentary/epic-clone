@@ -1,0 +1,87 @@
+{
+  "name": "epic-copy",
+  "version": "1.0.1",
+  "description": "Epic Clone",
+  "keywords": [
+    "extensions",
+    "Azure DevOps",
+    "Visual Studio Team Services"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": ""
+  },
+  "scripts": {
+    "clean": "rimraf ./dist ./out",
+    "compile": "npm run clean && webpack --mode production",
+    "compile:dev": "npm run clean && webpack --mode development",
+    "package": "npm run compile && tfx extension create --manifest-globs azure-devops-extension.json --overrides-file config/release.json --output-path out",
+    "package:dev": "npm run compile:dev && tfx extension create --manifest-globs azure-devops-extension.json --overrides-file config/dev.json --output-path out",
+    "publish": "npm run compile && tfx extension publish --manifest-globs azure-devops-extension.json --overrides-file config/release.json --output-path out",
+    "publish:dev": "npm run compile:dev && tfx extension publish --manifest-globs azure-devops-extension.json --overrides-file config/dev.json --output-path out",
+    "start:dev": "webpack-dev-server --mode development"
+  },
+  "dependencies": {
+    "azure-devops-extension-api": "^2.218.0",
+    "azure-devops-extension-sdk": "^3.1.2",
+    "azure-devops-ui": "^2.167.63",
+    "react": "~16.13.1",
+    "react-dom": "~16.13.1"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.21.8",
+    "@testing-library/jest-dom": "^5.11.0",
+    "@testing-library/react": "^10.4.4",
+    "@types/jest": "^26.0.3",
+    "@types/react": "~16.8.2",
+    "@types/react-dom": "~16.8.0",
+    "base64-inline-loader": "^2.0.1",
+    "copy-webpack-plugin": "^7.0.0",
+    "cross-env": "^7.0.3",
+    "css-loader": "^6.7.1",
+    "jest": "^26.1.0",
+    "jest-junit-reporter": "^1.1.0",
+    "rimraf": "~2.6.2",
+    "sass": "^1.62.1",
+    "sass-loader": "^13.0.0",
+    "style-loader": "~0.23.1",
+    "tfx-cli": "^0.11.0",
+    "ts-jest": "^26.1.1",
+    "ts-loader": "~5.2.2",
+    "typescript": "^3.9.6",
+    "webpack": "^5.23.0",
+    "webpack-cli": "^5.1.4",
+    "webpack-dev-server": "^4.15.1"
+  },
+  "jest": {
+    "transform": {
+      "^.+\\.(js|ts|tsx|jsx)$": "ts-jest"
+    },
+    "transformIgnorePatterns": [
+      "node_modules/(?!(react-native|azure-devops-ui|azure-devops-extension-sdk)/)"
+    ],
+    "moduleNameMapper": {
+      "\\.(jpg|jpeg|png|gif|eot|otf|webp|svg|ttf|woff|woff2|mp4|webm|wav|mp3|m4a|aac|oga)$": "<rootDir>/src/__mocks__/fileMock.js",
+      "\\.(css|less|scss)$": "<rootDir>/src/__mocks__/styleMock.js"
+    },
+    "preset": "ts-jest/presets/js-with-babel",
+    "testResultsProcessor": "./node_modules/jest-junit-reporter",
+    "collectCoverage": true,
+    "coverageReporters": [
+      "json",
+      "html",
+      "cobertura"
+    ],
+    "globals": {
+      "ts-jest": {
+        "tsconfig": "tsconfig.test.json"
+      }
+    }
+  },
+  "overrides": {
+    "tfx-cli": {
+      "xml2js": "0.5.0"
+    }
+  }
+}
