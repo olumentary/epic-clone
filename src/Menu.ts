@@ -32,11 +32,7 @@ async function createWorkItem(workItem: WorkItem) {
   var comment = `This work item was cloned from work item #${workItem.id}: ${workItem.fields[CoreFields.Title]}`;
   patchDocument.push(createFieldPatchBlock(CoreFields.History, comment));
   console.log(patchDocument);
-  return getClient(WorkItemTrackingRestClient).createWorkItem(
-    patchDocument,
-    workItem.fields[CoreFields.Project],
-    workItem.fields[CoreFields.WorkItemType]
-  );
+  return getClient(WorkItemTrackingRestClient).createWorkItem(patchDocument, workItem.fields[CoreFields.Project], workItem.fields[CoreFields.WorkItemType]);
 }
 
 async function cloneChildren(sourceWorkItem: WorkItem, targetWorkItem: WorkItem) {
@@ -53,22 +49,18 @@ async function collectChildIds(workItem: WorkItem, visited = new Set<number>()):
   const promises: Promise<void>[] = [];
 
   for (const relation of workItem.relations) {
+    // Get Childs Only
     if (relation.rel == 'System.LinkTypes.Hierarchy-Forward') {
       const childUrl = relation.url;
       const childId = parseInt(/[^/]*$/.exec(childUrl)![0]);
 
+      // Track if child node is already visited to avoid duplicates
       if (!visited.has(childId)) {
         visited.add(childId);
         childIds.add(childId);
 
         const promise = (async () => {
-          const newWorkItem = await getClient(WorkItemTrackingRestClient).getWorkItem(
-            childId,
-            undefined,
-            undefined,
-            undefined,
-            WorkItemExpand.All
-          );
+          const newWorkItem = await getClient(WorkItemTrackingRestClient).getWorkItem(childId, undefined, undefined, undefined, WorkItemExpand.All);
           const childIdsFromChild = await collectChildIds(newWorkItem, visited);
           childIdsFromChild.forEach(id => childIds.add(id));
         })();
@@ -78,6 +70,7 @@ async function collectChildIds(workItem: WorkItem, visited = new Set<number>()):
     }
   }
 
+  // Avoid infinite recursion due to async/await nature by awaiting for promises
   await Promise.all(promises);
 
   // Convert Set to Array before returning
@@ -85,13 +78,7 @@ async function collectChildIds(workItem: WorkItem, visited = new Set<number>()):
 }
 
 async function performClone(workItemId: number) {
-  const sourceWorkItem = await getClient(WorkItemTrackingRestClient).getWorkItem(
-    workItemId,
-    undefined,
-    undefined,
-    undefined,
-    WorkItemExpand.All
-  );
+  const sourceWorkItem = await getClient(WorkItemTrackingRestClient).getWorkItem(workItemId, undefined, undefined, undefined, WorkItemExpand.All);
 
   console.log(sourceWorkItem);
   const targetWorkItem = await createWorkItem(sourceWorkItem);
@@ -100,7 +87,7 @@ async function performClone(workItemId: number) {
   return targetWorkItem;
 }
 
-async function showDialog(workItemId: number) {
+async function showCloneDialog(workItemId: number) {
   var dialogOptions = <IMessageDialogOptions>{
     title: 'Epic Clone',
     okText: 'Clone',
@@ -135,7 +122,7 @@ const actionProvider = {
 
     let workItemId = context.workItemId || context.workItemIds[0];
     if (workItemId) {
-      showDialog(workItemId);
+      showCloneDialog(workItemId);
     }
   },
 };
